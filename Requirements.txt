@@ -1,8 +1,20 @@
-streamlit
-pypdf2
-langchain
-python-dotenv
-faiss-cpu
-openai
-langchain-openai
-langchain-community
+# StudyBuddy Requirements
+# Core dependencies
+streamlit>=1.28.0
+python-dotenv>=1.0.0
+
+# Document processing
+PyPDF2>=3.0.1
+langchain>=0.1.0
+langchain-community>=0.0.10
+
+# OpenAI integration - Updated
+openai>=1.0.0
+langchain-openai>=0.0.5
+
+# Vector storage and embeddings
+faiss-cpu>=1.7.4
+tiktoken>=0.5.0
+
+# Additional utilities
+typing-extensions>=4.8.0
