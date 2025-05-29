@@ -1,9 +1,8 @@
 streamlit
-pypdf
+pypdf2
 langchain
-pyhton-dotenv
+python-dotenv
 faiss-cpu
 openai
-huggingface-hub
-InstructorEmbeddings
-sentence-transformers
+langchain-openai
+langchain-community
