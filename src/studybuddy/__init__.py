@@ -10,6 +10,13 @@ __author__ = "StudyBuddy Team"
 from .config.settings import settings
 from .core.document_processor import DocumentProcessor
 from .core.chat_service import ChatService
+from .core.project_manager import ProjectManager
 from .ui.components import UIComponents
 
-__all__ = ["settings", "DocumentProcessor", "ChatService", "UIComponents"]
+__all__ = [
+    "settings",
+    "DocumentProcessor",
+    "ChatService",
+    "ProjectManager",
+    "UIComponents",
+]

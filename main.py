@@ -1,4 +1,4 @@
-"""Main application file for StudyBuddy - Structured version."""
+"""Main application file for StudyBuddy - Minimalist version."""
 
 import streamlit as st
 import time
@@ -7,12 +7,12 @@ import time
 from src.studybuddy.config.settings import settings
 from src.studybuddy.core.document_processor import DocumentProcessor
 from src.studybuddy.core.chat_service import ChatService
+from src.studybuddy.core.project_manager import ProjectManager
 from src.studybuddy.ui.components import UIComponents
 from src.studybuddy.ui.templates import CSS_STYLES
 from src.studybuddy.utils.helpers import (
     validate_environment,
     initialize_streamlit_config,
-    clear_chat_session,
 )
 
 
@@ -22,6 +22,7 @@ class StudyBuddyApp:
     def __init__(self):
         self.document_processor = DocumentProcessor()
         self.chat_service = ChatService()
+        self.project_manager = ProjectManager()
         self.ui = UIComponents()
 
     def setup_app(self):
@@ -40,148 +41,92 @@ class StudyBuddyApp:
 
     def handle_user_input(self, user_question: str):
         """Handle user question input and generate response."""
-        if not user_question.strip():
-            return
-
         response = self.chat_service.handle_user_question(
             user_question, st.session_state.conversation
         )
 
         if response:
             st.session_state.chat_history = response["chat_history"]
-            # Don't try to clear the input - let Streamlit handle it naturally
+            self.project_manager.save_session_to_project(
+                st.session_state.current_project_id
+            )
 
     def process_documents(self, pdf_docs):
-        """Process uploaded PDF documents."""
+        """Process uploaded PDF documents with minimal UI feedback."""
         if not pdf_docs:
-            st.warning("⚠️ Please upload at least one PDF document.")
+            st.warning("Please upload at least one PDF document.")
             return
 
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+        # Save files to current project
+        file_names = [pdf.name for pdf in pdf_docs]
+        self.project_manager.save_files_to_project(
+            st.session_state.current_project_id, pdf_docs, file_names
+        )
 
-        try:
-            # Step 1: Process documents
-            status_text.text("📖 Extracting text from PDFs...")
-            progress_bar.progress(25)
-
+        with st.spinner("Processing documents..."):
+            # Process documents
             vector_store = self.document_processor.process_documents(pdf_docs)
             if vector_store is None:
                 return
 
-            # Step 2: Create conversation chain
-            status_text.text("🔗 Setting up conversation chain...")
-            progress_bar.progress(75)
-
+            # Create conversation chain
             conversation = self.chat_service.create_conversation_chain(vector_store)
             if conversation is None:
                 return
 
-            # Step 3: Complete setup
-            progress_bar.progress(100)
+            # Update session state
             st.session_state.conversation = conversation
             st.session_state.documents_processed = True
             st.session_state.document_count = len(pdf_docs)
+            st.session_state.uploaded_files = pdf_docs
+            st.session_state.file_names = file_names
 
-            status_text.text("✅ Processing complete!")
+            # Save to project
+            self.project_manager.save_session_to_project(
+                st.session_state.current_project_id
+            )
+
+            st.success("Documents processed successfully!")
             time.sleep(1)
-
-            st.success(
-                "🎉 Documents processed successfully! You can now ask questions."
-            )
-            st.balloons()
-
-        except Exception as e:
-            st.error(f"❌ Error during processing: {str(e)}")
-        finally:
-            progress_bar.empty()
-            status_text.empty()
-
-    def render_main_content(self):
-        """Render the main content area."""
-        col1, col2 = st.columns([3, 1])
-
-        with col1:
-            # Status indicator
-            self.ui.render_status_indicator(st.session_state.conversation is not None)
-
-            # Chat input with send button
-            st.subheader("💬 Chat with your documents")
-
-            # Create input columns
-            input_col1, input_col2 = st.columns([4, 1])
-
-            with input_col1:
-                user_question = st.text_input(
-                    "Ask a question about your documents:",
-                    placeholder="e.g., What are the main topics discussed in the document?",
-                    key="user_input",
-                )
-
-            with input_col2:
-                st.markdown(
-                    "<div style='padding-top: 1.8rem;'>", unsafe_allow_html=True
-                )
-                send_button = st.button(
-                    "Send", type="primary", use_container_width=True
-                )
-                st.markdown("</div>", unsafe_allow_html=True)
-
-            # Handle input from either text input or send button
-            if user_question or send_button:
-                if st.session_state.user_input.strip():
-                    self.handle_user_input(st.session_state.user_input)
-
-            # Render chat history or welcome screen
-            if st.session_state.chat_history:
-                self.ui.render_chat_history(st.session_state.chat_history)
-            else:
-                self.ui.render_welcome_screen()
-
-        with col2:
-            # Document statistics
-            st.subheader("📚 Document Management")
-            self.ui.render_document_stats(st.session_state.get("document_count"))
-
-    def render_sidebar(self):
-        """Render the sidebar with file upload and controls."""
-        with st.sidebar:
-            # File upload section
-            pdf_docs = self.ui.render_file_upload_section()
-
-            # Process button
-            process_button = st.button(
-                "🚀 Process Documents", type="primary", use_container_width=True
-            )
-
-            if process_button:
-                self.process_documents(pdf_docs)
-
-            # Clear session button
-            if st.session_state.conversation:
-                st.divider()
-                if st.button(
-                    "🗑️ Clear Session", help="Clear current session and start over"
-                ):
-                    clear_chat_session()
-                    st.rerun()
-
-            # Help section
-            self.ui.render_sidebar_help()
+            st.rerun()
 
     def run(self):
-        """Run the main application."""
+        """Run the main application with clean layout."""
         # Setup
         self.setup_app()
 
-        # Render header
+        # Header
         self.ui.render_header()
 
-        # Render main content
-        self.render_main_content()
+        # Create default project if none exist
+        if not self.project_manager.get_all_projects():
+            default_id = self.project_manager.create_project(
+                name="My First Project",
+                emoji="📚",
+            )
+            self.project_manager.set_current_project(default_id)
 
-        # Render sidebar
-        self.render_sidebar()
+        # Main layout: sidebar and main content
+        with st.sidebar:
+            pdf_docs = self.ui.render_sidebar_content(self.project_manager)
+            if pdf_docs:
+                self.process_documents(pdf_docs)
+
+        # Main content area
+        user_input = self.ui.render_main_chat_area(self.project_manager)
+        if user_input:
+            self.handle_user_input(user_input)
+
+        # Chat history or welcome
+        if st.session_state.chat_history:
+            self.ui.render_chat_history(st.session_state.chat_history)
+        else:
+            self.ui.render_welcome_screen()
+
+        # Project stats in a clean sidebar section
+        with st.sidebar:
+            st.divider()
+            self.ui.render_project_stats(self.project_manager)
 
 
 def main():

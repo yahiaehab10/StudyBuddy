@@ -72,3 +72,7 @@ class ChatService:
             st.session_state.chat_history = None
         if "documents_processed" not in st.session_state:
             st.session_state.documents_processed = False
+        if "uploaded_files" not in st.session_state:
+            st.session_state.uploaded_files = []
+        if "file_names" not in st.session_state:
+            st.session_state.file_names = []

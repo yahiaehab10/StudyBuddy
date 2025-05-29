@@ -31,6 +31,10 @@ class Settings:
     ALLOWED_FILE_TYPES = ["pdf"]
     MAX_FILE_SIZE_MB = 200
 
+    # Project Management
+    DEFAULT_PROJECT_EMOJI = "📚"
+    PROJECT_EMOJIS = ["📚", "🔬", "📐", "📖", "💻", "🎨", "🏛️", "🌍", "🧪", "📊"]
+
     @classmethod
     def validate_api_key(cls) -> bool:
         """Validate that OpenAI API key is set."""
