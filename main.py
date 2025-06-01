@@ -87,6 +87,32 @@ class StudyBuddyApp:
             )
 
             st.success("Documents processed successfully!")
+
+            # Auto-setup note-taking AI
+            project_id = st.session_state.current_project_id
+            if not st.session_state.get("peft_initialized", False):
+                try:
+                    st.info("🧠 Setting up note-taking AI...")
+                    # Extract document chunks for training
+                    raw_text = self.document_processor.extract_text_from_pdfs(pdf_docs)
+                    document_chunks = (
+                        self.document_processor.split_text_into_chunks(raw_text)
+                        if raw_text
+                        else None
+                    )
+
+                    # Setup note-taking system
+                    success = self.chat_service.setup_peft_for_project(
+                        project_id, document_chunks
+                    )
+                    if success:
+                        st.session_state.peft_initialized = True
+                        st.success(
+                            "🎉 Note-taking AI is ready! Check the sidebar to enable it."
+                        )
+                except Exception as e:
+                    st.warning(f"Note-taking AI setup skipped: {str(e)}")
+
             time.sleep(1)
             st.rerun()
 
@@ -94,9 +120,6 @@ class StudyBuddyApp:
         """Run the main application with clean layout."""
         # Setup
         self.setup_app()
-
-        # Header
-        self.ui.render_header()
 
         # Create default project if none exist
         if not self.project_manager.get_all_projects():
@@ -108,9 +131,11 @@ class StudyBuddyApp:
 
         # Main layout: sidebar and main content
         with st.sidebar:
-            pdf_docs = self.ui.render_sidebar_content(self.project_manager)
-            if pdf_docs:
-                self.process_documents(pdf_docs)
+            sidebar_result = self.ui.render_sidebar_content(
+                self.project_manager, self.chat_service
+            )
+            if sidebar_result and sidebar_result.get("action") == "process_documents":
+                self.process_documents(sidebar_result.get("files"))
 
         # Main content area
         user_input = self.ui.render_main_chat_area(self.project_manager)
@@ -122,6 +147,25 @@ class StudyBuddyApp:
             self.ui.render_chat_history(st.session_state.chat_history)
         else:
             self.ui.render_welcome_screen()
+
+            # Show note-taking style preview if no chat history
+            if st.session_state.get("note_style_enabled", False):
+                st.markdown("---")
+                st.markdown("### 📝 Note-taking Style Preview")
+                st.markdown(
+                    """
+                **When note-taking style is enabled, responses will be formatted like this:**
+                
+                📚 **CONCEPT EXPLANATION**
+                
+                **Key Points:**
+                • Structured bullet points
+                • Clear section headers
+                • Important formulas highlighted
+                
+                **Remember:** Memory aids and study tips included! 🎯
+                """
+                )
 
         # Project stats in a clean sidebar section
         with st.sidebar:

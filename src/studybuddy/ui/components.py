@@ -255,27 +255,142 @@ class UIComponents:
                         st.rerun()
 
     @staticmethod
-    def render_sidebar_content(project_manager):
-        """Render complete sidebar content."""
-        # Project creation
-        UIComponents.render_project_creation_form(project_manager)
-
-        st.divider()
-
-        # File upload
+    def render_peft_controls(project_manager, chat_service):
+        """Render PEFT fine-tuning controls with better error handling."""
         current_project = project_manager.get_current_project()
-        if current_project:
-            st.markdown("**Documents**")
-            pdf_docs = UIComponents.render_file_upload_section()
 
-            # Process button
-            if st.button("Process Documents", type="primary", use_container_width=True):
-                return pdf_docs
+        if current_project:
+            st.markdown(
+                '<div class="section-header">🧠 AI Fine-tuning</div>',
+                unsafe_allow_html=True,
+            )
+
+            # Note-taking style toggle
+            note_style_enabled = st.checkbox(
+                "📝 Enable Note-taking Style",
+                value=st.session_state.get("note_style_enabled", False),
+                help="Use AI fine-tuned for structured note-taking responses",
+            )
+
+            if note_style_enabled != st.session_state.get("note_style_enabled", False):
+                st.session_state.note_style_enabled = note_style_enabled
+                try:
+                    chat_service.toggle_note_style(note_style_enabled)
+                    if note_style_enabled:
+                        st.success("📚 Note-taking style enabled!")
+                    else:
+                        st.info("💬 Standard conversational style enabled.")
+                except Exception as e:
+                    st.error(f"Error toggling note style: {str(e)}")
+
+            # Status indicator
+            peft_ready = st.session_state.get("peft_initialized", False)
+
+            if peft_ready:
+                st.markdown(
+                    """
+                    <div class="status-indicator status-ready">
+                        🎯 Note-taking AI ready
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    """
+                    <div class="status-indicator status-error">
+                        ⚙️ Note-taking AI not configured
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            # Fine-tuning controls
+            if st.button(
+                "🚀 Setup Note-taking AI" if not peft_ready else "🔄 Retrain AI",
+                help="Configure AI for better note-taking responses",
+                use_container_width=True,
+                type="secondary" if peft_ready else "primary",
+            ):
+                project_id = current_project["id"]
+
+                # Check if documents are available
+                if not current_project.get("uploaded_files"):
+                    st.warning(
+                        "⚠️ Please upload documents first to train the note-taking AI on your content."
+                    )
+                    return
+
+                try:
+                    with st.spinner("🧠 Setting up note-taking AI..."):
+                        # Get document chunks if available
+                        document_chunks = None
+                        if current_project.get("uploaded_files"):
+                            from ..core.document_processor import DocumentProcessor
+
+                            doc_processor = DocumentProcessor()
+                            raw_text = doc_processor.extract_text_from_pdfs(
+                                current_project["uploaded_files"]
+                            )
+                            if raw_text:
+                                document_chunks = doc_processor.split_text_into_chunks(
+                                    raw_text
+                                )
+
+                        # Setup note-taking system
+                        success = chat_service.setup_peft_for_project(
+                            project_id, document_chunks
+                        )
+
+                        if success:
+                            st.session_state.peft_initialized = True
+                            st.success("🎉 Note-taking AI successfully configured!")
+                            st.info(
+                                "💡 Enable 'Note-taking Style' above to start using it."
+                            )
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.error("❌ Setup failed. Please try again.")
+
+                except Exception as e:
+                    st.error(f"❌ Setup encountered an error: {str(e)}")
+                    st.info("The standard AI chat will still work normally.")
+
+    @staticmethod
+    def render_sidebar_content(project_manager, chat_service=None):
+        """Render complete sidebar content with better error handling."""
+        try:
+            # Project creation
+            UIComponents.render_project_creation_form(project_manager)
 
             st.divider()
 
-            # Project actions
-            UIComponents.render_project_actions(project_manager)
+            # File upload
+            current_project = project_manager.get_current_project()
+            if current_project:
+                st.markdown("**Documents**")
+                pdf_docs = UIComponents.render_file_upload_section()
+
+                # Process button
+                if st.button(
+                    "Process Documents", type="primary", use_container_width=True
+                ):
+                    return {"action": "process_documents", "files": pdf_docs}
+
+                st.divider()
+
+                # PEFT controls (if chat_service is provided)
+                if chat_service:
+                    UIComponents.render_peft_controls(project_manager, chat_service)
+                    st.divider()
+
+                # Project actions
+                UIComponents.render_project_actions(project_manager)
+
+        except Exception as e:
+            st.error(f"Sidebar error: {str(e)}")
+            st.info("Some features may be temporarily unavailable.")
 
         return None
 
