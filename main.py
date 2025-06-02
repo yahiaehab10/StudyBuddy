@@ -1,10 +1,8 @@
-"""Main application file for StudyBuddy - Minimalist version."""
+"""Main application file for Study Buddy - Simple, clean design."""
 
 import streamlit as st
-import time
 
-# Import our structured modules
-from src.studybuddy.config.settings import settings
+# Import our modules
 from src.studybuddy.core.document_processor import DocumentProcessor
 from src.studybuddy.core.chat_service import ChatService
 from src.studybuddy.core.project_manager import ProjectManager
@@ -17,7 +15,7 @@ from src.studybuddy.utils.helpers import (
 
 
 class StudyBuddyApp:
-    """Main application class for StudyBuddy."""
+    """Study Buddy application with clean UI."""
 
     def __init__(self):
         self.document_processor = DocumentProcessor()
@@ -26,21 +24,47 @@ class StudyBuddyApp:
         self.ui = UIComponents()
 
     def setup_app(self):
-        """Setup the Streamlit application."""
+        """Setup the application."""
         initialize_streamlit_config()
 
-        # Validate environment
         if not validate_environment():
             st.stop()
 
-        # Apply CSS styles
         st.write(CSS_STYLES, unsafe_allow_html=True)
-
-        # Initialize session state
         self.chat_service.initialize_session_state()
 
-    def handle_user_input(self, user_question: str):
-        """Handle user question input and generate response."""
+    def process_documents(self, pdf_docs):
+        """Process uploaded documents."""
+        if not pdf_docs:
+            st.warning("Please upload PDF files.")
+            return
+
+        with st.spinner("Processing documents..."):
+            # Process documents
+            vector_store = self.document_processor.process_documents(pdf_docs)
+            if not vector_store:
+                return
+
+            # Create conversation
+            conversation = self.chat_service.create_conversation_chain(vector_store)
+            if not conversation:
+                return
+
+            # Update session
+            st.session_state.conversation = conversation
+            st.session_state.documents_processed = True
+
+            # Save to project
+            file_names = [pdf.name for pdf in pdf_docs]
+            self.project_manager.save_files_to_project(
+                st.session_state.current_project_id, pdf_docs, file_names
+            )
+
+            st.success("Documents processed successfully!")
+            st.rerun()
+
+    def handle_user_input(self, user_question):
+        """Handle user question."""
         response = self.chat_service.handle_user_question(
             user_question, st.session_state.conversation
         )
@@ -51,130 +75,46 @@ class StudyBuddyApp:
                 st.session_state.current_project_id
             )
 
-    def process_documents(self, pdf_docs):
-        """Process uploaded PDF documents with minimal UI feedback."""
-        if not pdf_docs:
-            st.warning("Please upload at least one PDF document.")
-            return
-
-        # Save files to current project
-        file_names = [pdf.name for pdf in pdf_docs]
-        self.project_manager.save_files_to_project(
-            st.session_state.current_project_id, pdf_docs, file_names
-        )
-
-        with st.spinner("Processing documents..."):
-            # Process documents
-            vector_store = self.document_processor.process_documents(pdf_docs)
-            if vector_store is None:
-                return
-
-            # Create conversation chain
-            conversation = self.chat_service.create_conversation_chain(vector_store)
-            if conversation is None:
-                return
-
-            # Update session state
-            st.session_state.conversation = conversation
-            st.session_state.documents_processed = True
-            st.session_state.document_count = len(pdf_docs)
-            st.session_state.uploaded_files = pdf_docs
-            st.session_state.file_names = file_names
-
-            # Save to project
-            self.project_manager.save_session_to_project(
-                st.session_state.current_project_id
-            )
-
-            st.success("Documents processed successfully!")
-
-            # Auto-setup note-taking AI
-            project_id = st.session_state.current_project_id
-            if not st.session_state.get("peft_initialized", False):
-                try:
-                    st.info("🧠 Setting up note-taking AI...")
-                    # Extract document chunks for training
-                    raw_text = self.document_processor.extract_text_from_pdfs(pdf_docs)
-                    document_chunks = (
-                        self.document_processor.split_text_into_chunks(raw_text)
-                        if raw_text
-                        else None
-                    )
-
-                    # Setup note-taking system
-                    success = self.chat_service.setup_peft_for_project(
-                        project_id, document_chunks
-                    )
-                    if success:
-                        st.session_state.peft_initialized = True
-                        st.success(
-                            "🎉 Note-taking AI is ready! Check the sidebar to enable it."
-                        )
-                except Exception as e:
-                    st.warning(f"Note-taking AI setup skipped: {str(e)}")
-
-            time.sleep(1)
-            st.rerun()
-
     def run(self):
-        """Run the main application with clean layout."""
-        # Setup
+        """Run the application."""
         self.setup_app()
 
-        # Create default project if none exist
+        # Create default project if needed
         if not self.project_manager.get_all_projects():
-            default_id = self.project_manager.create_project(
-                name="My First Project",
-                emoji="📚",
-            )
+            default_id = self.project_manager.create_project("My First Project", "📚")
             self.project_manager.set_current_project(default_id)
 
-        # Main layout: sidebar and main content
-        with st.sidebar:
-            sidebar_result = self.ui.render_sidebar_content(
+        # Header
+        self.ui.render_header()
+
+        # Project selector in main area
+        self.ui.render_project_selector(self.project_manager)
+
+        # Layout: sidebar and main content
+        col1, col2 = st.columns([1, 3])
+
+        with col1:
+            sidebar_result = self.ui.render_sidebar(
                 self.project_manager, self.chat_service
             )
-            if sidebar_result and sidebar_result.get("action") == "process_documents":
+            if sidebar_result and sidebar_result.get("action") == "process":
                 self.process_documents(sidebar_result.get("files"))
 
-        # Main content area
-        user_input = self.ui.render_main_chat_area(self.project_manager)
-        if user_input:
-            self.handle_user_input(user_input)
+        with col2:
+            # Chat input
+            user_input = self.ui.render_chat_input()
+            if user_input:
+                self.handle_user_input(user_input)
 
-        # Chat history or welcome
-        if st.session_state.chat_history:
-            self.ui.render_chat_history(st.session_state.chat_history)
-        else:
-            self.ui.render_welcome_screen()
-
-            # Show note-taking style preview if no chat history
-            if st.session_state.get("note_style_enabled", False):
-                st.markdown("---")
-                st.markdown("### 📝 Note-taking Style Preview")
-                st.markdown(
-                    """
-                **When note-taking style is enabled, responses will be formatted like this:**
-                
-                📚 **CONCEPT EXPLANATION**
-                
-                **Key Points:**
-                • Structured bullet points
-                • Clear section headers
-                • Important formulas highlighted
-                
-                **Remember:** Memory aids and study tips included! 🎯
-                """
-                )
-
-        # Project stats in a clean sidebar section
-        with st.sidebar:
-            st.divider()
-            self.ui.render_project_stats(self.project_manager)
+            # Chat or welcome
+            if st.session_state.get("chat_history"):
+                self.ui.render_chat_history(st.session_state.chat_history)
+            else:
+                self.ui.render_welcome()
 
 
 def main():
-    """Main entry point for the application."""
+    """Main entry point."""
     app = StudyBuddyApp()
     app.run()
 

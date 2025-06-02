@@ -2,23 +2,23 @@
 
 from typing import Optional
 import streamlit as st
-from langchain_openai import ChatOpenAI  # Updated import
+from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 
 from ..config.settings import settings
-from .peft_service import PEFTNoteTakingService
+from .peft_service import ChatbotService
 
 
 class ChatService:
     """Handles chat functionality and conversation management."""
 
     def __init__(self):
-        self.llm = ChatOpenAI(**settings.get_llm_config())  # Now using updated class
+        self.llm = ChatOpenAI(**settings.get_llm_config())
         self.conversation = None
-        self.peft_service = PEFTNoteTakingService()
-        self.use_note_style = False
+        self.chatbot_service = ChatbotService()
+        self.use_simple_chatbot = False
 
     def create_conversation_chain(
         self, vector_store: FAISS
@@ -54,86 +54,72 @@ class ChatService:
         Returns:
             Response dictionary with chat history or None if error
         """
-        if not conversation_chain:
-            st.error("🚫 Please upload and process documents first!")
-            return None
-
         try:
             with st.spinner("🤔 StudyBuddy is thinking..."):
-                # Check if we should use note-taking style
-                if self.use_note_style and self.peft_service.is_initialized:
-                    # Get relevant context from the retriever
-                    retriever = conversation_chain.retriever
-                    relevant_docs = retriever.get_relevant_documents(question)
-                    context = "\n".join([doc.page_content for doc in relevant_docs[:2]])
+                # Check if we should use simple chatbot mode
+                if self.use_simple_chatbot or not conversation_chain:
+                    # Get relevant context if available
+                    context = ""
+                    if conversation_chain:
+                        retriever = conversation_chain.retriever
+                        relevant_docs = retriever.get_relevant_documents(question)
+                        context = "\n".join(
+                            [doc.page_content for doc in relevant_docs[:2]]
+                        )
 
-                    # Generate note-style response
-                    note_response = self.peft_service.generate_note_style_response(
+                    # Generate chatbot response
+                    chatbot_response = self.chatbot_service.generate_response(
                         question, context
                     )
 
                     # Create a mock response in the expected format
                     from langchain.schema import HumanMessage, AIMessage
 
-                    # Get existing chat history
-                    memory = conversation_chain.memory
-                    chat_history = memory.chat_memory.messages.copy()
+                    # Get existing chat history if available
+                    chat_history = []
+                    if conversation_chain and conversation_chain.memory:
+                        chat_history = (
+                            conversation_chain.memory.chat_memory.messages.copy()
+                        )
 
                     # Add new messages
                     chat_history.append(HumanMessage(content=question))
-                    chat_history.append(AIMessage(content=note_response))
+                    chat_history.append(AIMessage(content=chatbot_response))
 
-                    # Update memory
-                    memory.chat_memory.messages = chat_history
+                    # Update memory if available
+                    if conversation_chain and conversation_chain.memory:
+                        conversation_chain.memory.chat_memory.messages = chat_history
 
-                    return {"chat_history": chat_history, "answer": note_response}
+                    return {"chat_history": chat_history, "answer": chatbot_response}
                 else:
-                    # Use normal LangChain response
+                    # Use normal LangChain response with documents
                     response = conversation_chain.invoke({"question": question})
                     return response
 
         except Exception as e:
             st.error(f"❌ Error processing your question: {str(e)}")
-            return None
+            # Fallback to simple chatbot
+            try:
+                fallback_response = self.chatbot_service.generate_response(question, "")
+                return {"chat_history": [], "answer": fallback_response}
+            except:
+                return None
 
-    def toggle_note_style(self, enable: bool):
-        """Toggle note-taking style responses."""
-        self.use_note_style = enable
+    def toggle_simple_chatbot(self, enable: bool):
+        """Toggle simple chatbot mode."""
+        self.use_simple_chatbot = enable
 
-    def setup_peft_for_project(
-        self, project_id: str, document_chunks: list = None
-    ) -> bool:
-        """Set up PEFT fine-tuning for a specific project."""
-        try:
-            # Try to load existing fine-tuned model
-            if self.peft_service.load_fine_tuned_model(project_id):
-                return True
+    def get_study_tips(self) -> list:
+        """Get study tips from the chatbot service."""
+        return self.chatbot_service.get_study_tips()
 
-            # Initialize the template-based system
-            if not self.peft_service.initialize_model():
-                return False
+    def search_knowledge_base(self, search_term: str) -> list:
+        """Search the chatbot's knowledge base."""
+        return self.chatbot_service.search_knowledge_base(search_term)
 
-            # Prepare training data (for template system)
-            custom_examples = []
-            if document_chunks:
-                custom_examples = (
-                    self.peft_service.create_training_examples_from_documents(
-                        document_chunks
-                    )
-                )
-
-            training_data = self.peft_service.prepare_training_data(custom_examples)
-
-            # Setup the template system
-            if self.peft_service.fine_tune_model(training_data):
-                # Save the configuration
-                return self.peft_service.save_fine_tuned_model(project_id)
-
-            return False
-
-        except Exception as e:
-            st.error(f"Error setting up note-taking style: {str(e)}")
-            return False
+    def get_available_topics(self) -> list:
+        """Get available topics from the chatbot."""
+        return self.chatbot_service.get_available_topics()
 
     def initialize_session_state(self):
         """Initialize Streamlit session state variables."""
@@ -147,7 +133,5 @@ class ChatService:
             st.session_state.uploaded_files = []
         if "file_names" not in st.session_state:
             st.session_state.file_names = []
-        if "note_style_enabled" not in st.session_state:
-            st.session_state.note_style_enabled = False
-        if "peft_initialized" not in st.session_state:
-            st.session_state.peft_initialized = False
+        if "simple_chatbot_enabled" not in st.session_state:
+            st.session_state.simple_chatbot_enabled = False

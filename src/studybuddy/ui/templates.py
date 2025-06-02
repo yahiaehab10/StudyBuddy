@@ -1,298 +1,201 @@
-"""HTML templates and CSS styles for StudyBuddy UI."""
+"""HTML templates and CSS styles for Study Buddy UI - Simple, clean design."""
 
-# Enhanced CSS styles for the application
+# Simplified CSS styles with improved colors
 CSS_STYLES = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-/* Modern Variables */
+/* Simple Color Palette with better colors */
 :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --secondary: #8b5cf6;
-    --accent: #06b6d4;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --border: #e2e8f0;
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --radius: 0.75rem;
+    --primary: #3b82f6;         /* Brighter blue */
+    --primary-light: #60a5fa;   /* Lighter blue */
+    --primary-dark: #2563eb;    /* Darker blue */
+    --success: #10b981;         /* Emerald green */
+    --warning: #f59e0b;         /* Amber */
+    --error: #ef4444;           /* Red */
+    
+    --bg: #ffffff;              /* White background */
+    --bg-light: #f8fafc;        /* Very light blue gray */
+    --card: #ffffff;            /* White cards */
+    --border: #e2e8f0;          /* Light blue gray border */
+    
+    --text: #0f172a;            /* Dark slate blue text */
+    --text-light: #64748b;      /* Slate blue text */
+    --text-xlight: #94a3b8;     /* Light slate blue text */
+    
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --radius: 8px;
+    --spacing: 16px;
 }
 
-/* Base App Styling */
-.stApp {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, #e2e8f0 100%) !important;
-    color: var(--text-primary) !important;
+/* Base */
+body, .stApp {
+    font-family: 'Inter', sans-serif !important;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    line-height: 1.5;
 }
 
-/* Header */
-.main-header {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    padding: 2rem;
-    border-radius: var(--radius);
-    margin-bottom: 2rem;
+/* App Header */
+.app-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
-    box-shadow: var(--shadow);
+    padding: var(--spacing);
+    border-radius: var(--radius);
+    margin-bottom: var(--spacing);
     text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.main-header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-    letter-spacing: -0.025em;
+.app-header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
 }
 
-.main-header p {
-    font-size: 1.125rem;
+.app-header p {
+    font-size: 1rem;
     margin: 0;
     opacity: 0.9;
 }
 
 /* Chat Container */
 .chat-container {
-    background: var(--bg-primary);
-    border-radius: var(--radius);
-    padding: 2rem;
-    margin: 2rem 0;
+    background: var(--card);
     border: 1px solid var(--border);
-    max-height: 70vh;
+    border-radius: var(--radius);
+    padding: var(--spacing);
+    margin: var(--spacing) 0;
+    max-height: 60vh;
     overflow-y: auto;
     box-shadow: var(--shadow);
 }
 
 /* Messages */
 .message {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    animation: slideIn 0.3s ease-out;
-}
-
-.user-message-container {
-    justify-content: flex-end;
-    margin-left: 15%;
-}
-
-.bot-message-container {
-    justify-content: flex-start;
-    margin-right: 15%;
-}
-
-.message-avatar {
-    width: 40px;
-    height: 40px;
+    padding: 12px;
     border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    font-weight: 600;
-    flex-shrink: 0;
-    box-shadow: var(--shadow);
-}
-
-.user-avatar {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
-    order: 2;
-}
-
-.bot-avatar {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
-    color: white;
-}
-
-.message-content {
-    flex: 1;
-    padding: 1.25rem 1.5rem;
-    border-radius: var(--radius);
-    line-height: 1.6;
-    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+    max-width: 85%;
+    font-size: 0.9375rem;
+    line-height: 1.5;
 }
 
 .user-message {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
-    border-bottom-right-radius: 0.25rem;
+    margin-left: auto;
+    border-bottom-right-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .bot-message {
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    background: var(--bg-light);
+    color: var(--text);
     border: 1px solid var(--border);
-    border-bottom-left-radius: 0.25rem;
-}
-
-/* Status Indicators */
-.status-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    border-radius: var(--radius);
-    font-weight: 500;
-    margin: 1rem 0;
-    box-shadow: var(--shadow);
-}
-
-.status-ready {
-    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-    color: white;
-}
-
-.status-error {
-    background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
-    color: white;
-}
-
-/* Cards */
-.info-card, .project-selector, .metric-card {
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    margin: 1rem 0;
-    box-shadow: var(--shadow);
-    transition: all 0.2s ease;
-}
-
-.info-card {
-    text-align: center;
-    background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
-    border-color: #e9d5ff;
-}
-
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px -8px rgb(0 0 0 / 0.2);
+    margin-right: auto;
+    border-bottom-left-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Form Controls */
 .stTextInput > div > div > input,
-.stTextArea > div > div > textarea,
 .stSelectbox > div > div > div {
-    border: 2px solid var(--border) !important;
+    border: 1px solid var(--border) !important;
     border-radius: var(--radius) !important;
-    padding: 0.875rem 1rem !important;
-    background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    box-shadow: var(--shadow) !important;
-    transition: all 0.2s ease !important;
+    padding: 10px 14px !important;
+    background: white !important;
     font-family: 'Inter', sans-serif !important;
+    transition: border-color 0.2s !important;
+    color: var(--text) !important;
 }
 
 .stTextInput > div > div > input:focus,
-.stTextArea > div > div > textarea:focus,
 .stSelectbox > div > div > div:focus {
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
-    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
 }
 
 /* Buttons */
 .stButton > button {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+    background: linear-gradient(to bottom, var(--primary-light), var(--primary)) !important;
     color: white !important;
     border: none !important;
     border-radius: var(--radius) !important;
-    padding: 0.875rem 1.5rem !important;
-    font-weight: 600 !important;
-    transition: all 0.2s ease !important;
-    box-shadow: var(--shadow) !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
     font-family: 'Inter', sans-serif !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .stButton > button:hover {
+    background: linear-gradient(to bottom, var(--primary), var(--primary-dark)) !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 8px 25px -8px rgb(0 0 0 / 0.3) !important;
 }
 
 .stButton > button[kind="secondary"] {
-    background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 2px solid var(--border) !important;
+    background: white !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
 }
 
 .stButton > button[kind="secondary"]:hover {
-    background: var(--bg-secondary) !important;
     border-color: var(--primary) !important;
-}
-
-/* Sidebar */
-.css-1d391kg {
-    background: var(--bg-primary) !important;
-    border-right: 1px solid var(--border) !important;
-    box-shadow: var(--shadow) !important;
+    color: var(--primary) !important;
+    background: var(--bg-light) !important;
 }
 
 /* File Upload */
 .stFileUploader > div {
-    border: 2px dashed var(--border) !important;
+    border: 1px solid var(--border) !important;
     border-radius: var(--radius) !important;
-    background: var(--bg-secondary) !important;
-    padding: 2rem !important;
+    background: var(--bg-light) !important;
+    padding: var(--spacing) !important;
     transition: all 0.2s ease !important;
 }
 
 .stFileUploader > div:hover {
     border-color: var(--primary) !important;
-    background: #fef7ff !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
 }
 
-/* Progress Bar */
-.stProgress > div > div > div {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
-    border-radius: 0.25rem !important;
+/* Sidebar */
+.css-1d391kg {
+    background: var(--bg) !important;
+    border-right: 1px solid var(--border) !important;
 }
 
-/* Section Headers */
-.section-header {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 1.5rem 0 1rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+/* Alerts */
+.status {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    margin: 8px 0;
+    font-size: 0.875rem;
 }
 
-/* Checkbox */
-.stCheckbox > label {
-    font-weight: 500 !important;
-    color: var(--text-primary) !important;
+.status-success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
 }
 
-/* Animations */
-@keyframes slideIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(10px);
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0);
-    }
+.status-info {
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
 }
 
-/* Utilities */
-.text-sm { 
-    font-size: 0.875rem; 
-    color: var(--text-secondary); 
+.status-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
 }
 
-/* Remove Streamlit branding */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-.stDeployButton {display: none;}
+/* Hide Streamlit Elements */
+#MainMenu, footer, header { visibility: hidden; }
+.stDeployButton { display: none; }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
@@ -300,65 +203,25 @@ header {visibility: hidden;}
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
+    background: var(--bg-light);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: var(--primary-light);
     border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .main-header {
-        padding: 1.5rem;
-    }
-    
-    .main-header h1 {
-        font-size: 2rem;
-    }
-    
-    .chat-container {
-        padding: 1rem;
-        margin: 1rem 0;
-    }
-    
-    .user-message-container {
-        margin-left: 5%;
-    }
-    
-    .bot-message-container {
-        margin-right: 5%;
-    }
-}
-
-/* Error prevention */
-.stApp * {
-    box-sizing: border-box;
+    background: var(--primary);
 }
 </style>
 """
 
-# Clean HTML template for bot messages
+# Simple message templates
 BOT_MESSAGE_TEMPLATE = """
-<div class="message bot-message-container">
-    <div class="message-avatar bot-avatar">🤖</div>
-    <div class="message-content bot-message">
-        {{MSG}}
-    </div>
-</div>
+<div class="message bot-message">{{MSG}}</div>
 """
 
-# Clean HTML template for user messages
 USER_MESSAGE_TEMPLATE = """
-<div class="message user-message-container">
-    <div class="message-content user-message">
-        {{MSG}}
-    </div>
-    <div class="message-avatar user-avatar">👤</div>
-</div>
+<div class="message user-message">{{MSG}}</div>
 """

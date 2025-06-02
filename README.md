@@ -1,15 +1,15 @@
-# StudyBuddy - AI-Powered Document Chat Assistant
+# Study Buddy - AI-Powered Study Assistant
 
-StudyBuddy is a Streamlit-based application that allows you to upload PDF documents and chat with an AI assistant about their content using OpenAI's language models.
+Study Buddy is a clean, simple Streamlit application that helps you study more effectively by allowing you to upload PDF documents and chat with an AI assistant about their content.
 
 ## Features
 
-- Upload multiple PDF documents
-- Extract and process text from PDFs
-- Ask questions about your documents in natural language
-- Get AI-powered responses based on document content
-- Maintain conversation history
-- Beautiful chat interface with user and bot avatars
+- **Clean, Minimalist Interface**: Simple and intuitive design for distraction-free studying
+- **Project Management**: Create and manage multiple study projects
+- **Document Processing**: Upload and process multiple PDF documents
+- **AI-Powered Q&A**: Ask questions about your documents in natural language
+- **Smart Responses**: Get intelligent responses based on your documents
+- **Simple Chatbot Mode**: Get study help even without uploading documents
 
 ## Setup
 
@@ -29,15 +29,16 @@ StudyBuddy is a Streamlit-based application that allows you to upload PDF docume
 
 3. **Run the application:**
    ```bash
-   streamlit run app.py
+   streamlit run main.py
    ```
 
 ## Usage
 
-1. **Upload Documents**: Use the sidebar to upload one or more PDF files
-2. **Process Documents**: Click "Process Documents" to extract and index the content
-3. **Ask Questions**: Type your questions in the text input field
-4. **Get Answers**: The AI will respond based on the content of your uploaded documents
+1. **Create a Project**: Create a new study project (e.g., "Physics 101")
+2. **Upload Documents**: Upload one or more PDF study materials
+3. **Process Documents**: Click "Process Documents" to extract and analyze content
+4. **Ask Questions**: Type your study questions in the chat input
+5. **Get Answers**: Receive clear, helpful answers based on your documents
 
 ## Requirements
 
@@ -47,8 +48,8 @@ StudyBuddy is a Streamlit-based application that allows you to upload PDF docume
 
 ## Troubleshooting
 
-- **"Please set your OPENAI_API_KEY"**: Make sure you have a `.env` file with a valid OpenAI API key
-- **PDF reading errors**: Ensure your PDFs are not password-protected or corrupted
+- **"Please set your OPENAI_API_KEY"**: Ensure you have a `.env` file with a valid OpenAI API key
+- **PDF reading errors**: Check that your PDFs are not password-protected or corrupted
 - **No text extracted**: Some PDFs might be image-based and require OCR (not currently supported)
 
 ## License
