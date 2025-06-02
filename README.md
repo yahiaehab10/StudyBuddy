@@ -1,57 +1,65 @@
-# Study Buddy - AI-Powered Study Assistant
+# Study Buddy
 
-Study Buddy is a clean, simple Streamlit application that helps you study more effectively by allowing you to upload PDF documents and chat with an AI assistant about their content.
+A minimalist AI-powered study assistant that helps you learn from your documents through simple conversation.
+
+## What is Study Buddy?
+
+Study Buddy is a simple application that helps you study more effectively. Upload your PDF study materials, and ask questions about them in plain language. The AI assistant will provide clear, helpful answers based on your documents.
 
 ## Features
 
-- **Clean, Minimalist Interface**: Simple and intuitive design for distraction-free studying
-- **Project Management**: Create and manage multiple study projects
-- **Document Processing**: Upload and process multiple PDF documents
-- **AI-Powered Q&A**: Ask questions about your documents in natural language
-- **Smart Responses**: Get intelligent responses based on your documents
-- **Simple Chatbot Mode**: Get study help even without uploading documents
+- **Ask Questions About Your Documents**: Upload PDFs and get instant answers
+- **Multiple Projects**: Organize different subjects into separate projects
+- **Conversation Memory**: Ask follow-up questions naturally
+- **Simple Mode**: Get study help even without uploading documents
 
-## Setup
+## Getting Started
 
-1. **Install dependencies:**
+1. **Install dependencies**:
 
    ```bash
    pip install -r Requirements.txt
    ```
 
-2. **Set up environment variables:**
+2. **Set up your API key**:
 
    - Copy `.env.example` to `.env`
-   - Add your OpenAI API key to the `.env` file:
+   - Add your API key to the `.env` file:
      ```
-     OPENAI_API_KEY=your_actual_api_key_here
+     OPENAI_API_KEY=your_key_here
      ```
 
-3. **Run the application:**
+3. **Start the app**:
+
    ```bash
    streamlit run main.py
    ```
 
-## Usage
+## How to Use
 
-1. **Create a Project**: Create a new study project (e.g., "Physics 101")
-2. **Upload Documents**: Upload one or more PDF study materials
-3. **Process Documents**: Click "Process Documents" to extract and analyze content
-4. **Ask Questions**: Type your study questions in the chat input
-5. **Get Answers**: Receive clear, helpful answers based on your documents
+### Create a Project
 
-## Requirements
+1. Enter a name like "Biology 101" or "Chemistry Notes"
+2. Choose an icon
+3. Click "Create Project"
 
-- Python 3.7+
-- OpenAI API key
-- Internet connection for API calls
+### Add Documents
+
+1. Upload your PDF files
+2. Click "Process Documents"
+
+### Start Learning
+
+1. Type your question
+2. Get an answer based on your documents
+3. Ask follow-up questions
+
+### Simple Mode
+
+Toggle "Simple Chatbot Mode" to get general study help without documents.
 
 ## Troubleshooting
 
-- **"Please set your OPENAI_API_KEY"**: Ensure you have a `.env` file with a valid OpenAI API key
-- **PDF reading errors**: Check that your PDFs are not password-protected or corrupted
-- **No text extracted**: Some PDFs might be image-based and require OCR (not currently supported)
-
-## License
-
-MIT License
+- **API Key Error**: Check your `.env` file has the correct API key
+- **PDF Problems**: Make sure your PDFs aren't password-protected
+- **Large Documents**: Very large PDFs might take longer to process
